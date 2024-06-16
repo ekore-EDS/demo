@@ -1,0 +1,64 @@
+@import '~bootstrap/scss/bootstrap.scss';
+
+@font-face {
+  font-family: Verdana;
+  src: url(./assets/font/verdana/VERDANA0.TTF);
+}
+
+@font-face {
+  font-family: 'VerdanaBold';
+  src: url(./assets/font/verdana/verdanab.ttf);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'VerdanaBold' !important;
+}
+
+html {
+  font-size: 87.5%; /* 62.5% of 16px = 10px */
+  position: relative;
+}
+body {
+  margin: 0;
+  font-family: 'Verdana', 'Roboto';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+$button-color: '#9DECF2';
+$button-border: '#81D0D8';
+
+#root {
+  height: 100%;
+}
+
+
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.gradientRoseYellowBtn {
+  background: linear-gradient(263deg, #D256E8 0%, #E7A34F 80%) 0% 0% no-repeat padding-box;
+}
+
+.MuiButtonBase-root.greyBtn,
+.MuiButtonBase-root.greyBtn:hover {
+  background-color: #F3F3F3;
+  border: 1px solid #E5E5E5;
+  color: #000000;
+}
+
+.MuiButtonBase-root.skyblueBtn,
+.MuiButtonBase-root.skyblueBtn:hover {
+  background-color: #9DECF2;
+  border: 1px solid #81D0D8;
+  color: #000000;
+}
+
+.action_button {
+  background: $button-color !important;
+  border: 1px solid $button-border !important;
+  border-radius: 4px;
+}
