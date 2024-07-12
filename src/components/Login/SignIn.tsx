@@ -10,12 +10,21 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { useNavigate } from 'react-router-dom';
+import { db } from '../..';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useAppStateContext } from '../../state/provider';
+import { setUserDetails } from '../../state/ed/actions';
 
 export default function SignIn() {
   const [loginDetails, setLoginDetails] = React.useState<any>({})
   const isLogdin: any = sessionStorage.getItem("iscustomerLogdin");
   const navigate = useNavigate();
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  let matchpassword: any;
+  let customerloginData: any;
+  let isSuperAdmin: boolean = false;
+  const { dispatch } = useAppStateContext();
+
+  const handleSubmit = async(event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const mobdata: any = {
@@ -29,20 +38,40 @@ export default function SignIn() {
     } else {
       mobdata.mobErr = 'Please enter valid mobile number'
     }
-
-    if(mobdata?.mobileNo && mobdata?.password && (mobdata?.password === '1234' || mobdata?.password === '9876')) {
+    
+    if(mobdata?.mobileNo && mobdata?.password) {
+      const collectionRef = collection(db, "users");
+      const q1 = await query(collectionRef,
+        where('password', '==', mobdata?.password),
+        where('username', '==', mobdata?.mobileNo)
+      );
+      customerloginData = await getDocs(q1);
+      customerloginData.forEach((doc: any) => {
+        isSuperAdmin = doc?.data()?.isSuperAdmin;
+      });
+      
+    }
+    if(mobdata?.mobileNo && mobdata?.password && (customerloginData?.size === 1 || isSuperAdmin)) {
       mobdata.otpErr = null
     } else {
       mobdata.otpErr = 'Please enter valid OTP'
     }
+
+    // if(mobdata?.mobileNo && mobdata?.password && (mobdata?.password === '1234' || mobdata?.password === '9876')) {
+    //   mobdata.otpErr = null
+    // } else {
+    //   mobdata.otpErr = 'Please enter valid OTP'
+    // }
     setLoginDetails(mobdata);
     if(mobdata.mobErr === null && mobdata.otpErr === null) {
       if(!(isLogdin && isLogdin === 'true')) {
         sessionStorage.setItem("iscustomerLogdin", "true");
         sessionStorage.setItem("userInfo", JSON.stringify({username: mobdata.mobileNo}));
+        dispatch(setUserDetails({activeUser: '', isSuperAdmin: false, currentUser: mobdata.mobileNo}))
       }
-      if(mobdata?.password === '9876') {
+      if(isSuperAdmin) {
         sessionStorage.setItem("issuperAdmin", "true");
+        dispatch(setUserDetails({activeUser: '', isSuperAdmin: true, currentUser: mobdata.mobileNo}))
       } else {
         sessionStorage.removeItem("issuperAdmin");
       }
@@ -86,7 +115,7 @@ export default function SignIn() {
               required
               fullWidth
               name="password"
-              label="OTP"
+              label="Password"
               type="password"
               id="password"
             />

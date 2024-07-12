@@ -6,19 +6,27 @@ import AppBar from '@mui/material/AppBar'
 import { Button } from '@mui/material';
 import { getuserInfo } from '../../utils/utils';
 import { useNavigate } from 'react-router-dom';
+import { useAppStateContext } from '../../state/provider';
+import { setUserDetails } from '../../state/ed/actions';
 
 const Header = () => {
     const userInfo: any = getuserInfo();
+    const { state, dispatch } = useAppStateContext();
+    const userDetails: any = state.ED.userDetails;
 
     const navigate = useNavigate();
+
+    
 
     const handleClick = () => {
         sessionStorage.removeItem('iscustomerLogdin');
         sessionStorage.removeItem('issuperAdmin');
         sessionStorage.removeItem('userInfo');
+        dispatch(setUserDetails({activeUser: '', isSuperAdmin: false, currentUser: ''}));
         navigate('/');
     }
     return (<AppBar
+        className='noPrint'
         position="static"
         color='inherit'
         sx={{textAlign: 'center', boxShadow: 0, borderBottom: '1px solid #ccc', width: '94%', marginLeft: '2rem'}}

@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { Formik, FormikConfig, FormikHelpers, FormikValues, useFormikContext } from "formik";
+import { Formik } from "formik";
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { initialReportData, validationSchema } from './data';
 import InputField from '../InputField';
@@ -7,6 +7,11 @@ import DiscreteSlider from '../DiscreteSlider';
 import { FIELD_VALUE_LIST, NOR_ABN_LIST, YES_NO_LIST, getuserDataList, getuserInfo } from '../../utils/utils';
 import Radiogroup from '../Radiogroup';
 import SelectField from '../SelectField';
+import { collection, addDoc, setDoc, doc } from "firebase/firestore"; 
+import { db } from '../..';
+import { setFormData, setFormId, setTabNumber } from '../../state/ed/actions';
+import { useAppStateContext } from '../../state/provider';
+import AlertMessage from '../AlertMessage';
 
 interface EntryFormData {
     formData: any
@@ -15,7 +20,8 @@ interface EntryFormData {
 const EntryForm = (props: EntryFormData) => {
     const {formData} = props;
     const [_initialReportData, setInitialReportData] = useState(initialReportData);
-    
+    const [alertConfig, setAlertConfig] = useState<any>({open: false, severity: '', variant: '', message: ''});
+    const { state, dispatch } = useAppStateContext();
     const uList: any = getuserDataList() || {};
 
     useEffect(() => {
@@ -25,33 +31,83 @@ const EntryForm = (props: EntryFormData) => {
     }, [formData])
     
     const handleFormSubmit = async(values: any) => {
-        saveData(values, 'REPORT');
+        await writeDatatoFirestore(values, 'DRAFT');
+        dispatch(setTabNumber('3'));
     }
 
-    const handleSaveDraft = (val: any) => {
-        saveData(val, 'DRAFT');
+    const handleSaveDraft = async(val: any) => {
+        await writeDatatoFirestore(val, 'DRAFT');
     }
 
-    const saveData = (value: any, title: string) => {
-        const userInfo: any = getuserInfo();
-        const uid = `${title} ANC + ${Math.floor(Math.random() * 10000)} GBSCDFR`;
-        const draftdata = {[userInfo.username]: JSON.stringify({...value, uid})}
-        sessionStorage.setItem('userDataList', JSON.stringify({...uList, ...draftdata}));
+    // const writeUserData = (value: any, title: string) => {
+    //     const userInfo: any = getuserInfo();
+    //     const uid = `${title}-CASEDSMYS-${Math.floor(Math.random() * 10000)}`;
+    //     const db = getDatabase();
+    //     set(ref(db, 'eds-mys/' + userInfo.username), {...value, uid}).then((x: any) => {
+    //         // Data saved successfully!
+    //         console.log(x);
+    //       })
+    //       .catch((error: any) => {
+    //         // The write failed...
+    //         console.log(error);
+    //       });
+    // }
+
+    const writeDatatoFirestore = async(value: any, title: string) => {
+        try {
+            // const userInfo: any = getuserInfo();
+            const uname:string = state?.ED?.userDetails?.activeUser ? state?.ED?.userDetails?.activeUser : state?.ED?.userDetails?.currentUser
+            if(state.ED?.docId) {
+                await setDoc(doc(db, uname, state.ED?.docId), {...value, uid: state.ED?.formId});
+                dispatch(setFormData({...value, uid: state.ED?.formId}));
+                setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Updated !!'});
+                return 0;
+            } else {
+                const uid = `${title}-CASEDSMYS-${Math.floor(Math.random() * 10000)}`;
+                const docRef = await addDoc(collection(db, uname), {...value, uid});
+                if(docRef) {
+                    dispatch(setFormData({...value, uid}));
+                    dispatch(setFormId(docRef.id, uid));
+                    setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Added !!'});
+                    return 0;
+                }
+            }
+        } catch (e) {
+            setAlertConfig({isOpen: true, severity: 'error', message: 'Something went wrong, Please try again !!'});
+            console.error("Error adding document: ", e);
+            return 0;
+        }
     }
+
+    // const saveData = (value: any, title: string) => {
+    //     const userInfo: any = getuserInfo();
+    //     const uid = `${title} ANC + ${Math.floor(Math.random() * 10000)} GBSCDFR`;
+    //     const draftdata = {[userInfo.username]: JSON.stringify({...value, uid})}
+    //     sessionStorage.setItem('userDataList', JSON.stringify({...uList, ...draftdata}));
+    // }
+
+    const handleClose = (event: React.SyntheticEvent | Event, reason?: string) => {
+        if (reason === 'clickaway') {
+          return;
+        }
+    
+        setAlertConfig({isOpen: false, severity: '', message: ''});
+      };
 
     return (
         <div className="App container">
+            <AlertMessage isOpen={alertConfig.isOpen} handleClose={handleClose} severity={alertConfig.severity} message={alertConfig.message}/>
             <Formik
                 initialValues={_initialReportData}
                 enableReinitialize={true}
                 validationSchema={validationSchema}
-                onSubmit={values => {
+                onSubmit={(values: any) => {
                     // same shape as initial values
                     handleFormSubmit(values);
                     console.log(values);
                 }}
             >
-                {({ handleSubmit, handleChange, values, handleReset, status }) => (
+                {({ handleSubmit, handleChange, values, handleReset, status, errors }) => (
                    <form onSubmit={handleSubmit}>
                     <Grid container spacing={2}>
                         <Grid container item xs={12}>
@@ -394,7 +450,7 @@ const EntryForm = (props: EntryFormData) => {
                                     <Radiogroup name="lung_rragged_pleura" label={{eng: FIELD_VALUE_LIST.RAGGED_PLE}} radioList={YES_NO_LIST}/>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="lung_reffusion " label={{eng: FIELD_VALUE_LIST.EFFUSION}} radioList={YES_NO_LIST}/>
+                                    <Radiogroup name="lung_reffusion" label={{eng: FIELD_VALUE_LIST.EFFUSION}} radioList={YES_NO_LIST}/>
                                 </Grid>
                             </Grid>
                             <Grid container item xs={6}>
@@ -414,7 +470,7 @@ const EntryForm = (props: EntryFormData) => {
                                     <Radiogroup name="lung_lragged_pleura" label={{eng: FIELD_VALUE_LIST.RAGGED_PLE}} radioList={YES_NO_LIST}/>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="lung_leffusion " label={{eng: FIELD_VALUE_LIST.EFFUSION}} radioList={YES_NO_LIST}/>
+                                    <Radiogroup name="lung_leffusion" label={{eng: FIELD_VALUE_LIST.EFFUSION}} radioList={YES_NO_LIST}/>
                                 </Grid>
                             </Grid>
                             <Grid item xs={12}>
@@ -717,7 +773,7 @@ const EntryForm = (props: EntryFormData) => {
                             Save as Draft
                         </Button>
                     </Box>
-                    {/* <p>{JSON.stringify(values, null, 2)}</p> */}
+                    {/* <p>{JSON.stringify(errors, null, 2)}</p>  */}
                    </form>
                 )}
             </Formik>

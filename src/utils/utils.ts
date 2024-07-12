@@ -183,3 +183,7 @@ export const FIELD_VALUE_LIST: any = {
         }
         return null;
     }
+
+    export const formatYesNoVal = (val: string) => {
+        return val === 'y' ? 'Yes': 'No';
+    }
