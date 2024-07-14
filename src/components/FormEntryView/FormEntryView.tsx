@@ -10,14 +10,15 @@ import { db } from '../..';
 import AlertMessage from '../AlertMessage';
 
 interface FormEntryViewData {
-    formData: any
+    formData: any,
+    handleApproval?: any;
 }
 function FormEntryView(props: FormEntryViewData) {
     const { state, dispatch } = useAppStateContext();
     const [isSubmitting, setIsSubmitted] = useState(false);
     const [isApproved, setIsApproved] = useState(false);
     const [alertConfig, setAlertConfig] = useState<any>({open: false, severity: '', variant: '', message: ''});
-    const {formData} = props;
+    const {formData, handleApproval} = props;
 
     const handleSubmit = () => {
         writeDatatoFirestore(formData, 'REPORT');
@@ -50,9 +51,11 @@ function FormEntryView(props: FormEntryViewData) {
                 if(title === 'APPROVE') {
                     setIsApproved(true);
                     await setDoc(doc(db, 'approved_records', state.ED?.docId), req);
+                    handleApproval();
                     setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Approved !!'});
                 } else {
                     setIsSubmitted(true)
+                    handleApproval();
                     setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Updated !!'});
                 }
                 dispatch(setFormData({}));

@@ -23,6 +23,7 @@ const Home = () => {
   const [userData, setUserData] = useState<any[]>([]);
   const [currentUser, setCurrentUser] = useState<string>('');
   const { state, dispatch } = useAppStateContext();
+  const [ isSubmitted, setIsSubmitted ] = useState(false);
   let _uuid: any;
   // let draftData: any;
   const userdata = getuserInfo();
@@ -32,11 +33,15 @@ const Home = () => {
     // draftData = _d ? JSON.parse(uList[_uuid]) : null;
   }
 
+  const handleApproval = () => {
+    setIsSubmitted(!isSubmitted);
+  }
+
   const _singleUserData: any = useMemo(async() => {
     const querySnapshot = await getDocs(collection(db, _uuid));
     setsingleUserData(querySnapshot.docs);
     return querySnapshot.docs;
-  }, [_uuid]);
+  }, [_uuid, isSubmitted]);
 
   useEffect(() => {
     let data: any = [];
@@ -85,15 +90,16 @@ const Home = () => {
     dispatch(setFormData({...data}));
     // const data = JSON.parse(uList[id])
     setFormValues(data);
-    if(type === 'approved') {
-      setValue('4');
-    } else {
+    // if(type === 'approved') {
+    //   setValue('4');
+    // } else {
       if(data && data?.uid?.includes('DRAFT')) {
         setValue('1');
       } else {
         setValue('3');
       }
-    }
+    //   }
+    // }
     
   }
 
@@ -135,41 +141,15 @@ const Home = () => {
             }
             {isSuperAdmin || true ? singleUserData && singleUserData.length > 0 &&
             singleUserData.map((list: any) => {
-              return <div key={list} className='report_list' onClick={() => editForm(list)}>
+              return <>{!list?.data()?.isApproved && <div key={list} className='report_list' onClick={() => editForm(list)}>
                 {list.data().uid} 
-              </div>
+              </div>}</>
             }) : null}
           </Box>
         </TabPanel>
         <TabPanel value="3">
           <Box>
-            <h4 className='my-3'>Total Records</h4>
-            {userData && userData.length > 0 && <div className='my-3'>
-              <div className="my-2">
-                  <label>
-                      Please select the customer 
-                  </label>
-              </div>
-                <Autocomplete
-                  size='small'
-                  disablePortal
-                  id="combo-box-demo"
-                  options={userData || []}
-                  sx={{ width: 300 }}
-                  onChange={(e: any) => {
-                    dispatch(setUserDetails({...state?.ED?.userDetails, activeUser: e?.target?.textContent}))
-                    setCurrentUser(e?.target?.textContent)
-                  }}
-                  renderInput={(params) => <TextField {...params} label="" />}
-                />
-              </div>
-            }
-            {isSuperAdmin || true ? singleUserData && singleUserData.length > 0 &&
-            singleUserData.map((list: any) => {
-              return <div key={list} className='report_list' onClick={() => editForm(list)}>
-                {list.data().uid} 
-              </div>
-            }) : null}
+            <FormEntryView formData={formValues} handleApproval={handleApproval}/>
           </Box>
         </TabPanel>
         <TabPanel value='4'>

@@ -9,14 +9,14 @@ import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCn0CH1DpCV6fsW7Sv_5vuZ8h1aXRjgdeo",
+  apiKey: `${process.env.API_KEY}`,
   authDomain: "eds-mys.firebaseapp.com",
   projectId: "eds-mys",
   storageBucket: "eds-mys.appspot.com",
   messagingSenderId: "724864474316",
-  appId: "1:724864474316:web:1ef78f0b4480285b8d7669",
+  appId: `${process.env.APP_ID}`,
   measurementId: "G-70B6T0S8D9",
-  databaseURL: 'https://eds-mys-default-rtdb.asia-southeast1.firebasedatabase.app/',
+  databaseURL: `${process.env.DATABASE_URL}`,
 };
 
 // Initialize Firebase
