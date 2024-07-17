@@ -10,6 +10,8 @@ export const YES_NO_LIST: any[] = [{ value: 'y', label: {eng: 'Yes'}}, { value: 
 export const NOR_ABN_LIST: any[] = [{ value: 'normal', label: {eng: 'Normal'}}, { value: 'abnormal', label: {eng: 'Abnormal'}}]
 
 export const FIELD_VALUE_LIST: any = {
+    patient_identifier: 'Patient Identifier',
+    patient_name: 'Patient Name',
     RR: 'Respiratory rate (RR) ≥ 22 breaths per minute',
     AM: 'Altered mentation (Glasgow Coma Scale [GCS] < 15)',
     R_RATE: 'Respiration rate <8, >25',

@@ -122,7 +122,7 @@ const Home = () => {
             {userData && userData.length > 0 && <div className='my-3'>
               <div className="my-2">
                   <label>
-                      Please select the customer 
+                      Please select the user 
                   </label>
               </div>
                 <Autocomplete
@@ -141,8 +141,8 @@ const Home = () => {
             }
             {isSuperAdmin || true ? singleUserData && singleUserData.length > 0 &&
             singleUserData.map((list: any) => {
-              return <>{!list?.data()?.isApproved && <div key={list} className='report_list' onClick={() => editForm(list)}>
-                {list.data().uid} 
+              return <>{!list?.data()?.isApproved && <div key={list} className='report_list row' onClick={() => editForm(list)}>
+                <div className='child_list col-sm-12 col-md-8'><label>{list.data().uid}</label> <label>{list.data()?.patient_name}</label> <label>{list.data()?.patient_identifier}</label> </div>
               </div>}</>
             }) : null}
           </Box>
@@ -159,7 +159,7 @@ const Home = () => {
             {isSuperAdmin ? approvedReport && approvedReport.length > 0 &&
             approvedReport.map((list: any) => {
               return <div key={list} className='report_list' onClick={() => editForm(list, 'approved')}>
-                {list.data().uid} | {list.data().username}
+                <div className='child_list col-sm-12 col-md-8'><label>{list.data().uid}</label> <label>{list.data()?.patient_name}</label> <label>{list.data()?.patient_identifier}</label> </div>
               </div>
             }) : null}
           </Box>

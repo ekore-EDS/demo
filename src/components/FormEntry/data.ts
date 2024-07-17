@@ -1,5 +1,7 @@
 import * as yup from "yup";
 export const initialReportData = {
+    patient_identifier: '',
+    patient_name: '',
     rrate: '',
     mentation: '',
     systolicBP: '',
@@ -136,6 +138,8 @@ export const initialReportData = {
 }
 
 export const validationSchema = yup.object({
+    patient_identifier: yup.string().required("Please enter the above field"),
+    patient_name: yup.string().required("Please enter the above field"),
     rrate: yup.number().required("Please enter the above field"),
     mentation: yup.number().required("Please enter the above field"),
     systolicBP: yup.number().required("Please enter the above field"),

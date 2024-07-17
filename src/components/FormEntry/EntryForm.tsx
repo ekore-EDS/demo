@@ -113,6 +113,20 @@ const EntryForm = (props: EntryFormData) => {
                         <Grid container item xs={12}>
                             <Grid item xs={12}>
                                 <Typography component="h6" variant="h6" sx={{mb:2}}>
+                                    Patient Details
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={6} sx={{pr: 3}}>
+                                <InputField name="patient_name" label={{eng: FIELD_VALUE_LIST.patient_name}} />
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4} sx={{pr: 3}}>
+                                <InputField name="patient_identifier" label={{eng: FIELD_VALUE_LIST.patient_identifier}} />
+                            </Grid>
+                        </Grid>
+
+                        <Grid container item xs={12}>
+                            <Grid item xs={12}>
+                                <Typography component="h6" variant="h6" sx={{mb:2}}>
                                     qSOFA (score=/{'>'} 2 high risk of sepsis and high mortality)
                                 </Typography>
                             </Grid>
