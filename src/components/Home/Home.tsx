@@ -44,6 +44,16 @@ const Home = () => {
   }, [_uuid, isSubmitted]);
 
   useEffect(() => {
+    const userInfo: any = getuserInfo();
+    if(isSuperUser()) {
+      dispatch(setUserDetails({activeUser: '', isSuperAdmin: true, currentUser: userInfo?.username}))
+    } else {
+      dispatch(setUserDetails({activeUser: userInfo?.username, isSuperAdmin: false, currentUser: userInfo?.username}))
+    }
+    
+  }, [])
+
+  useEffect(() => {
     let data: any = [];
     const getusers = async() => {
       if(isSuperAdmin) {
@@ -115,7 +125,7 @@ const Home = () => {
             <Tab label="Submited Records" value="4" />
           </TabList>
         </Box>
-        <TabPanel value="1"><EntryForm formData={formValues}/></TabPanel>
+        <TabPanel value="1"><EntryForm formData={formValues} tabNo = {value}/></TabPanel>
         <TabPanel value="2">
           <Box>
             <h4 className='my-3'>Total Records</h4>

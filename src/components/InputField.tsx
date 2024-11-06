@@ -16,7 +16,7 @@ const InputField: FC<TextInputProps> = ({ name, label, placeholder, ...props }) 
   return (
     <div className="my-1">
     <div>
-      <label htmlFor="adharno">
+      <label htmlFor="adharno" className="font-weight-600">
           {label?.eng}
       </label>
     </div>

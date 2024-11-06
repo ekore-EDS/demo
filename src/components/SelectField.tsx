@@ -19,8 +19,8 @@ const SelectField: FC<SelectProps> = ({ name, label, placeholder, menuItem,handl
 
   return (
     <>
-    <div className="mb-4">
-      <label htmlFor="name">
+    <div className="mb-2">
+      <label htmlFor="name" className="font-weight-600">
           {label?.eng}
       </label>
     </div>

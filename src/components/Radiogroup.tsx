@@ -29,11 +29,11 @@ const Radiogroup: FC<RadioInputProps> = ({ name, label, radioList, labelType, wi
 
   return (
     <div className="my-1">
-    <div>
-      <label>
+    {label?.eng && <div>
+      <label className="font-weight-600">
           {label?.eng}
       </label>
-    </div>
+    </div>}
     
     <RadioGroup
         row

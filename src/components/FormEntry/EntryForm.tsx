@@ -1,24 +1,27 @@
 import React, {useState, useEffect} from 'react';
-import { Formik } from "formik";
+import { Formik, useFormikContext } from "formik";
 import { Box, Button, Grid, Typography } from "@mui/material";
 import { initialReportData, validationSchema } from './data';
 import InputField from '../InputField';
 import DiscreteSlider from '../DiscreteSlider';
-import { FIELD_VALUE_LIST, NOR_ABN_LIST, YES_NO_LIST, getuserDataList, getuserInfo } from '../../utils/utils';
+import { DISABILITY_MENU, FIELD_VALUE_LIST, LEFT_RIGHT_LISt, NOR_ABN_LIST, YES_NO_LIST, getCurrentDateWithMonth, getuserDataList, getuserInfo } from '../../utils/utils';
 import Radiogroup from '../Radiogroup';
 import SelectField from '../SelectField';
-import { collection, addDoc, setDoc, doc } from "firebase/firestore"; 
+import { collection, addDoc, setDoc, doc, getDocs } from "firebase/firestore"; 
 import { db } from '../..';
 import { setFormData, setFormId, setTabNumber } from '../../state/ed/actions';
 import { useAppStateContext } from '../../state/provider';
 import AlertMessage from '../AlertMessage';
 
 interface EntryFormData {
-    formData: any
+    formData: any,
+    tabNo: any
 }
 
+let total_rec = '';
+
 const EntryForm = (props: EntryFormData) => {
-    const {formData} = props;
+    const {formData, tabNo} = props;
     const [_initialReportData, setInitialReportData] = useState(initialReportData);
     const [alertConfig, setAlertConfig] = useState<any>({open: false, severity: '', variant: '', message: ''});
     const { state, dispatch } = useAppStateContext();
@@ -28,7 +31,22 @@ const EntryForm = (props: EntryFormData) => {
         if(formData) {
             setInitialReportData(formData);
         }
-    }, [formData])
+    }, [formData]);
+
+    useEffect(() => {
+        const getTotalRecords = async () => {
+            let rec = '';
+            const querySnapshot = await getDocs(collection(db, 'totalrecords'));
+            querySnapshot.forEach((doc: any) => {
+                rec = doc?.data()?.total_records || 0;
+                total_rec = `00${Number(rec) + 1}`;
+                setInitialReportData({..._initialReportData, patient_identifier: `EDS-${getCurrentDateWithMonth()}-${total_rec}`})
+            });
+        }
+        if(!total_rec && !formData) {
+            getTotalRecords();
+        }
+    }, [tabNo])
     
     const handleFormSubmit = async(values: any) => {
         await writeDatatoFirestore(values, 'DRAFT');
@@ -56,21 +74,25 @@ const EntryForm = (props: EntryFormData) => {
     const writeDatatoFirestore = async(value: any, title: string) => {
         try {
             // const userInfo: any = getuserInfo();
+            const qSOFA_score = getqSOFA(value);
+            const news_score = getNewsScore(value);
             const uname:string = state?.ED?.userDetails?.activeUser ? state?.ED?.userDetails?.activeUser : state?.ED?.userDetails?.currentUser
             if(state.ED?.docId) {
-                await setDoc(doc(db, uname, state.ED?.docId), {...value, uid: state.ED?.formId});
-                dispatch(setFormData({...value, uid: state.ED?.formId}));
+                await setDoc(doc(db, uname, state.ED?.docId), {...value, uid: state.ED?.formId, qSOFA_score, news_score});
+                dispatch(setFormData({...value, uid: state.ED?.formId, qSOFA_score, news_score}));
                 setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Updated !!'});
                 return 0;
             } else {
                 const uid = `${title}-CASEDSMYS-${Math.floor(Math.random() * 10000)}`;
-                const docRef = await addDoc(collection(db, uname), {...value, uid});
+                const docRef = await addDoc(collection(db, uname), {...value, uid, qSOFA_score, news_score});
                 if(docRef) {
-                    dispatch(setFormData({...value, uid}));
+                    dispatch(setFormData({...value, uid, qSOFA_score, news_score}));
                     dispatch(setFormId(docRef.id, uid));
                     setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Added !!'});
+                    await setDoc(doc(db, 'totalrecords', 'records'), {total_records: total_rec});
                     return 0;
                 }
+                
             }
         } catch (e) {
             setAlertConfig({isOpen: true, severity: 'error', message: 'Something went wrong, Please try again !!'});
@@ -93,6 +115,103 @@ const EntryForm = (props: EntryFormData) => {
     
         setAlertConfig({isOpen: false, severity: '', message: ''});
       };
+
+    const getqSOFA = (val: any) => {
+        const qsofadata = (val?.breathing_rr >= 22 ? 1 : 0) + (val?.disability_gcs  < 15 ? 1 : 0) + (val?.circulation_bpsys <=100 ? 1 : 0)
+        return qsofadata;
+    }
+
+    const getBreathingScore = (breathingVal: any) => {
+        let breathing_score = 0;
+        if(!breathingVal) return 0;
+        if(breathingVal <= 8 || breathingVal >= 25) {
+            breathing_score = 3;
+        } else if(breathingVal >= 12 && breathingVal <= 20) {
+            breathing_score = 0;
+        } else if(breathingVal >= 9 && breathingVal <= 11) {
+            breathing_score = 1;
+        } else {
+            breathing_score = 2;
+        }
+
+        return breathing_score;
+    }
+
+    const getSpo2Score = (spo2Val: any) => {
+        if(!spo2Val) return 0;
+        let spo2_score = 0;
+        if(spo2Val <= 91) {
+            spo2_score = 3;
+        } else if(spo2Val >= 96) {
+            spo2_score = 0;
+        } else if(spo2Val >= 94 && spo2Val <= 95) {
+            spo2_score = 1;
+        } else {
+            spo2_score = 2;
+        }
+        return spo2_score;
+    }
+
+    const getSystolicBPScore = (sysbpVal: any) => {
+        if(!sysbpVal) return 0;
+        let sysbp_score = 0;
+        if(sysbpVal <= 90 || sysbpVal >= 220) {
+            sysbp_score = 3;
+        } else if(sysbpVal >= 101 && sysbpVal <= 110) {
+            sysbp_score = 1;
+        } else if(sysbpVal >= 111 && sysbpVal <= 219) {
+            sysbp_score = 0;
+        } else {
+            sysbp_score = 2;
+        }
+        return sysbp_score;
+    }
+
+    const getacvpuScore = (val: any) => {
+        if(!val) return 0;
+        if(val === 'A') {
+            return 0;
+        }
+        return 3;
+    }
+
+    const gettempScore = (tempVal: any) => {
+        if(!tempVal) return 0;
+        let temp_score = 0;
+        if(tempVal <= 95) {
+            temp_score = 3;
+        } else if((tempVal >= 95.1 && tempVal <= 96.8) || (tempVal >= 100.5 && tempVal <=102.2)) {
+            temp_score = 1;
+        } else if(tempVal >= 96.9 && tempVal <= 100.4) {
+            temp_score = 0;
+        } else {
+            temp_score = 2;
+        }
+        return temp_score;
+    }
+
+    const getheartRate = (val: any) => {
+        if(!val) return 0;
+        let hr_score = 0;
+        if(val <= 40 || val >= 131) {
+            hr_score = 3;
+        } else if(val >= 41 && val <= 50 || (val >= 91 && val <= 110)) {
+            hr_score = 1;
+        } else if(val >= 51 && val <= 90) {
+            hr_score = 0;
+        } else {
+            hr_score = 2;
+        }
+        return hr_score;
+    }
+
+    const getNewsScore = (val: any) => {
+        let news_score = getBreathingScore(val?.breathing_rr) + getSpo2Score(val?.breathing_spo2) +
+        getSystolicBPScore(val?.circulation_bpsys) + getacvpuScore(val?.disability_sensorium) + gettempScore(val?.exposure_temp)
+        + getheartRate(val?.circulation_hr);
+        
+        return news_score;
+    }
 
     return (
         <div className="App container">
@@ -120,11 +239,11 @@ const EntryForm = (props: EntryFormData) => {
                                 <InputField name="patient_name" label={{eng: FIELD_VALUE_LIST.patient_name}} />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4} sx={{pr: 3}}>
-                                <InputField name="patient_identifier" label={{eng: FIELD_VALUE_LIST.patient_identifier}} />
+                                <InputField name="patient_identifier" label={{eng: FIELD_VALUE_LIST.patient_identifier}} disabled/>
                             </Grid>
                         </Grid>
 
-                        <Grid container item xs={12}>
+                        {/* <Grid container item xs={12}>
                             <Grid item xs={12}>
                                 <Typography component="h6" variant="h6" sx={{mb:2}}>
                                     qSOFA (score=/{'>'} 2 high risk of sepsis and high mortality)
@@ -139,8 +258,8 @@ const EntryForm = (props: EntryFormData) => {
                             <Grid item xs={12} sm={6} md={4}>
                                 <DiscreteSlider name="systolicBP" label={FIELD_VALUE_LIST.SBP} min={0} max={100} step={1}/>
                             </Grid>
-                        </Grid>
-                        <Grid container item xs={12}>
+                        </Grid> */}
+                        {/* <Grid container item xs={12}>
                             <Grid item xs={12}>
                                 <Typography component="h6" variant="h6" sx={{mb:2,  mt: 2}}>
                                     NEWS ( score chart is in the attachment)
@@ -165,7 +284,7 @@ const EntryForm = (props: EntryFormData) => {
                             <Grid item xs={12} sm={6} md={4}>
                                 <DiscreteSlider name="news_temprature" label={FIELD_VALUE_LIST.TEM_35} min={0} max={100} step={1}/>
                             </Grid>
-                        </Grid>
+                        </Grid> */}
 
                         <Grid container item xs={12}>
                             <Grid item xs={12}>
@@ -366,8 +485,8 @@ const EntryForm = (props: EntryFormData) => {
                                 </Typography>
                             </Grid>
                             
-                            <Grid item xs={12} sm={6} md={4} sx={{pr: 4}}>
-                                <SelectField name="disability_sensorium" label={{eng: FIELD_VALUE_LIST.SENSORIUM}} menuItem={['A', 'V', 'P', 'U']} handleChange={handleChange}/>
+                            <Grid item xs={12} sm={6} md={4} sx={{pr: 4, mb: 4}}>
+                                <SelectField name="disability_sensorium" label={{eng: FIELD_VALUE_LIST.SENSORIUM}} menuItem={DISABILITY_MENU} handleChange={handleChange}/>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <DiscreteSlider name="disability_gcs" label={FIELD_VALUE_LIST.GCS} min={3} max={15} step={1}/>
@@ -424,7 +543,7 @@ const EntryForm = (props: EntryFormData) => {
                                 <InputField name="local_examination" label={{eng: FIELD_VALUE_LIST.LOCAL_EXA}} rows={3} multiline={true} />
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
-                                <DiscreteSlider name="exposure_temp" label={FIELD_VALUE_LIST.TEMP_DEG} min={95.0} max={105.0} step={0.1}/>
+                                <DiscreteSlider name="exposure_temp" label={FIELD_VALUE_LIST.TEMP_DEG} min={94.0} max={105.0} step={0.1}/>
                             </Grid>
                             <Grid item xs={12} sm={6} md={6} sx={{mt:2}}>
                                 <Radiogroup name="ecg" label={{eng: FIELD_VALUE_LIST.ECG}} radioList={NOR_ABN_LIST}/>
@@ -504,18 +623,24 @@ const EntryForm = (props: EntryFormData) => {
                                     c. FAST 
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={6}>
-                                <Radiogroup name="fast_subxiphoid" label={{eng: FIELD_VALUE_LIST.SUB_X}} radioList={YES_NO_LIST}/>
+                            <Grid item xs={12} sm={12} md={12}>
+                                <Radiogroup name="fast_positive" label={{eng: FIELD_VALUE_LIST.POSITIVE_FLUID}} radioList={YES_NO_LIST}/>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={6}>
-                                <Radiogroup name="fast_rgtupr_quadrant" label={{eng: FIELD_VALUE_LIST.RIGHR_UPPER}} radioList={YES_NO_LIST}/>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={6}>
-                                <Radiogroup name="fast_lftupr_quadrant" label={{eng: FIELD_VALUE_LIST.LEFT_UPPER}} radioList={YES_NO_LIST}/>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={6}>
-                                <Radiogroup name="fast_suprapubic" label={{eng: FIELD_VALUE_LIST.SUPRA}} radioList={YES_NO_LIST}/>
-                            </Grid>
+                            { values?.fast_positive === 'y' &&
+                                <><Grid item xs={12} sm={6} md={6}>
+                                    <Radiogroup name="fast_subxiphoid" label={{eng: FIELD_VALUE_LIST.SUB_X}} radioList={YES_NO_LIST}/>
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={6}>
+                                    <Radiogroup name="fast_rgtupr_quadrant" label={{eng: FIELD_VALUE_LIST.RIGHR_UPPER}} radioList={YES_NO_LIST}/>
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={6}>
+                                    <Radiogroup name="fast_lftupr_quadrant" label={{eng: FIELD_VALUE_LIST.LEFT_UPPER}} radioList={YES_NO_LIST}/>
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={6}>
+                                    <Radiogroup name="fast_suprapubic" label={{eng: FIELD_VALUE_LIST.SUPRA}} radioList={YES_NO_LIST}/>
+                                </Grid>
+                                </>
+                            }
                         </Grid>
 
                         {/* // NEW FORM ABG */}
@@ -572,39 +697,36 @@ const EntryForm = (props: EntryFormData) => {
                                     RS
                                 </Typography>
                             </Grid>
-                            <Grid container item xs={6}>
-                                <Grid item xs={12}>
-                                    <Typography component="h6" variant="h6" sx={{mb:1, mt: 1, fontSize: '15px'}}>
-                                        Right  
-                                    </Typography>
-                                    <hr style={{width: '70%'}}/>
+                            <Grid container item xs={12}>
+                                <Grid container item xs={12} md={6}>
+                                    <Grid item xs={12} sm={6} md={6}>
+                                        <Radiogroup name="rs_decreased_air_entry" label={{eng: FIELD_VALUE_LIST.DECR_AIR}} radioList={YES_NO_LIST}/>
+                                    </Grid>
+                                    {values?.rs_decreased_air_entry === 'y' &&
+                                        <Grid item xs={12} sm={12} md={12}>
+                                            <Radiogroup name="rs_decreased_air_entry_side" label={{eng: 'Side'}} radioList={LEFT_RIGHT_LISt}/>
+                                        </Grid>
+                                    }
                                 </Grid>
-                                
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="rs_right_decreased_air_entry" label={{eng: FIELD_VALUE_LIST.DECR_AIR}} radioList={YES_NO_LIST}/>
+                                <Grid container item xs={12} md={6}>
+                                    <Grid item xs={12} sm={6} md={6}>
+                                        <Radiogroup name="rs_rhonchi" label={{eng: FIELD_VALUE_LIST.RHON}} radioList={YES_NO_LIST}/>
+                                    </Grid>
+                                    {values?.rs_rhonchi === 'y' &&
+                                        <Grid item xs={12} sm={12} md={12}>
+                                            <Radiogroup name="rs_rhonchi_side" label={{eng: 'Side'}} radioList={LEFT_RIGHT_LISt}/>
+                                        </Grid>
+                                    }
                                 </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="rs_right_rhonchi" label={{eng: FIELD_VALUE_LIST.RHON}} radioList={YES_NO_LIST}/>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="rs_right_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} radioList={YES_NO_LIST}/>
-                                </Grid>
-                            </Grid>
-                            <Grid container item xs={6}>
-                                <Grid item xs={12}>
-                                    <Typography component="h6" variant="h6" sx={{mb:1, mt: 1, fontSize: '15px'}}>
-                                        Left  
-                                    </Typography>
-                                    <hr style={{width: '70%'}}/>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="ts_left_decreased_air_entry" label={{eng: FIELD_VALUE_LIST.DECR_AIR}} radioList={YES_NO_LIST}/>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="rs_left_rhonchi" label={{eng: FIELD_VALUE_LIST.RHON}} radioList={YES_NO_LIST}/>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={6}>
-                                    <Radiogroup name="rs_left_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} radioList={YES_NO_LIST}/>
+                                <Grid container item xs={12} md={6}>
+                                    <Grid item xs={12} sm={6} md={6}>
+                                        <Radiogroup name="rs_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} radioList={YES_NO_LIST}/>
+                                    </Grid>
+                                    {values?.rs_crepts === 'y' &&
+                                        <Grid item xs={12} sm={12} md={12}>
+                                            <Radiogroup name="rs_crepts_side" label={{eng: 'Side'}} radioList={LEFT_RIGHT_LISt}/>
+                                        </Grid>
+                                    }
                                 </Grid>
                             </Grid>
 
@@ -776,6 +898,30 @@ const EntryForm = (props: EntryFormData) => {
                                     <Radiogroup name="need_source_control" label={{eng: FIELD_VALUE_LIST.PROCCED}} radioList={YES_NO_LIST}/>
                                 </Grid>
                             </Grid>
+                            
+                            <Grid container item xs={12}>
+                                <Grid item xs={12}>
+                                    <Typography component="h6" variant="h6" sx={{mb:2}}>
+                                        qSOFA (score=/{'>'} 2 high risk of sepsis and high mortality)
+                                    </Typography>
+                                </Grid>
+                                <Grid item  sx={{paddingLeft: '0.5rem'}} className='grid-content-small responsive-css'>
+                                    <b>{getqSOFA(values)} {getqSOFA(values) > 1 ? ' - high risk of sepsis and high mortality' : ''}</b> 
+                                </Grid>
+                            </Grid>
+
+                            <Grid container item xs={12}>
+                                <Grid item xs={12}>
+                                    <Typography component="h6" variant="h6" sx={{mb:2,  mt: 2}}>
+                                        NEWS ( score chart is in the attachment)
+                                    </Typography>
+                                </Grid>
+                                <Grid item  sx={{paddingLeft: '0.5rem'}} className='grid-content-small responsive-css'>
+                                    <b>{getNewsScore(values)} {getNewsScore(values) >= 7 ? ' - Clinical Risk is High':
+                                    getNewsScore(values) >= 5 && getNewsScore(values) <= 6 ? '- Clinical Risk is Medium' :
+                                    '- Clinical Risk is Low'}</b> 
+                                </Grid>
+                            </Grid>
                         </Grid>
                     </Grid>
                     <div className="divider my-3"/>
@@ -787,7 +933,7 @@ const EntryForm = (props: EntryFormData) => {
                             Save as Draft
                         </Button>
                     </Box>
-                    {/* <p>{JSON.stringify(errors, null, 2)}</p>  */}
+                    {/* <p>{JSON.stringify(values, null, 2)}</p>  */}
                    </form>
                 )}
             </Formik>

@@ -19,7 +19,7 @@ interface SliderProps {
 const DiscreteSlider: FC<SliderProps> = ({ name, label, placeholder, handleChange, min, max, step, width, ...props }) => {
   const [field, meta] = useField(name);
 
-  const slider_width: any = width ? width : 250
+  let slider_width: any = width ? width : 250
 
   const { setFieldValue }: any = useFormikContext();
 
@@ -30,13 +30,13 @@ const DiscreteSlider: FC<SliderProps> = ({ name, label, placeholder, handleChang
   };
 
   return (
-    <Box sx={{ marginRight: '20px'}}>
+    <Box sx={{ marginRight: '20px', marginBottom: '2rem'}}>
       <div className="field-label">
-        <label htmlFor="name">
+        <label htmlFor="name" className="font-weight-600">
           {label}
         </label>
       </div>
-      <Box sx={{ width: slider_width, marginLeft: '10px'}} >
+      <Box sx={{ width: slider_width, marginLeft: '10px'}} className = {'slider-width'}>
       <Slider
         value={meta.value ? meta.value : 0}
         min={min}
