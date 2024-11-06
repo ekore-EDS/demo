@@ -6,6 +6,7 @@ export const PLOT_SIZE: any = {
 }
 
 export const YES_NO_LIST: any[] = [{ value: 'y', label: {eng: 'Yes'}}, { value: 'n', label: {eng: 'No'}}]
+export const LEFT_RIGHT_LISt: any[] = [{ value: 'left', label: {eng: 'Left'}}, { value: 'right', label: {eng: 'Right'}}]
 
 export const NOR_ABN_LIST: any[] = [{ value: 'normal', label: {eng: 'Normal'}}, { value: 'abnormal', label: {eng: 'Abnormal'}}]
 
@@ -90,6 +91,7 @@ export const FIELD_VALUE_LIST: any = {
     EF:'EF ',
     IVC:'IVC- >50% collapsibility',
     FAST:'c. FAST',
+    POSITIVE_FLUID:'POSITIVE for free fluid ',
     SUB_X:'Subxiphoid ',
     RIGHR_UPPER:'Right upper quadrant ',
     LEFT_UPPER:'Left upper quadrant ',
@@ -189,3 +191,16 @@ export const FIELD_VALUE_LIST: any = {
     export const formatYesNoVal = (val: string) => {
         return val === 'y' ? 'Yes': 'No';
     }
+
+    const months = [
+        "JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+        "JUL", "AUG", "SEPT", "OCT", "NOV", "DEC"
+      ];
+
+    export const getCurrentDateWithMonth = () => {
+        const d = new Date();
+        const monthName = months[d.getMonth()];
+        return monthName + (d.getDate() < 10 ? '0' + d.getDate() : d.getDate());
+    }
+
+    export const DISABILITY_MENU = ['A - Patient is alert', 'V - Patient responds to verbal commands', 'P - Patient responds to painful stimulus', 'U - Patient is unconcious']
