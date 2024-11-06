@@ -14,13 +14,14 @@ import { useAppStateContext } from '../../state/provider';
 import AlertMessage from '../AlertMessage';
 
 interface EntryFormData {
-    formData: any
+    formData: any,
+    tabNo: any
 }
 
 let total_rec = '';
 
 const EntryForm = (props: EntryFormData) => {
-    const {formData} = props;
+    const {formData, tabNo} = props;
     const [_initialReportData, setInitialReportData] = useState(initialReportData);
     const [alertConfig, setAlertConfig] = useState<any>({open: false, severity: '', variant: '', message: ''});
     const { state, dispatch } = useAppStateContext();
@@ -42,10 +43,10 @@ const EntryForm = (props: EntryFormData) => {
                 setInitialReportData({..._initialReportData, patient_identifier: `EDS-${getCurrentDateWithMonth()}-${total_rec}`})
             });
         }
-        if(!total_rec) {
+        if(!total_rec && !formData) {
             getTotalRecords();
         }
-    }, [])
+    }, [tabNo])
     
     const handleFormSubmit = async(values: any) => {
         await writeDatatoFirestore(values, 'DRAFT');
@@ -88,9 +89,10 @@ const EntryForm = (props: EntryFormData) => {
                     dispatch(setFormData({...value, uid, qSOFA_score, news_score}));
                     dispatch(setFormId(docRef.id, uid));
                     setAlertConfig({isOpen: true, severity: 'success', message: 'Successfully Added !!'});
+                    await setDoc(doc(db, 'totalrecords', 'records'), {total_records: total_rec});
                     return 0;
                 }
-                await setDoc(doc(db, 'totalrecords', 'records'), {total_records: total_rec});
+                
             }
         } catch (e) {
             setAlertConfig({isOpen: true, severity: 'error', message: 'Something went wrong, Please try again !!'});
@@ -931,7 +933,7 @@ const EntryForm = (props: EntryFormData) => {
                             Save as Draft
                         </Button>
                     </Box>
-                    <p>{JSON.stringify(values, null, 2)}</p> 
+                    {/* <p>{JSON.stringify(values, null, 2)}</p>  */}
                    </form>
                 )}
             </Formik>
