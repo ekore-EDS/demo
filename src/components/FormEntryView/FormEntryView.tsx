@@ -84,7 +84,7 @@ function FormEntryView(props: FormEntryViewData) {
                         Print
                     </Button>
                    <Grid container spacing={2}>
-                        <Grid container item xs={12} className='grid-section'>
+                        {/* <Grid container item xs={12} className='grid-section'>
                             <Grid item xs={12}>
                                 <Typography component="h6" variant="h6" sx={{mb:2}}>
                                     qSOFA (score=/{'>'} 2-----high risk of sepsis and high mortality)
@@ -92,7 +92,6 @@ function FormEntryView(props: FormEntryViewData) {
                             </Grid>
                             <Grid item  sx={{my: '0rem', mx: '0.5rem'}} className='grid-content'>
                                 <FieldValue value={formData?.rrate} name="rrate" label={FIELD_VALUE_LIST.RR}/>
-                                {/* <FieldValue name="dimension" label={{eng: "Site Dimention", kan: 'ಸೈಟ್ ಆಯಾಮಗಳು'}} radioList={dimensionList}/> */}
                             </Grid>
                             <Grid item  sx={{paddingLeft: '0.5rem'}} className='responsive-css grid-content'>
                                 <FieldValue name="mentation" label={FIELD_VALUE_LIST.AM} placeholder="Enter Booth Name" value={formData?.mentation}/>
@@ -100,12 +99,8 @@ function FormEntryView(props: FormEntryViewData) {
                             <Grid item  sx={{paddingLeft: '0.5rem'}} className='grid-content-small responsive-css'>
                                 <FieldValue value={formData?.systolicBP} name="systolicBP" label={FIELD_VALUE_LIST.SBP} />
                             </Grid>
-                            {/* <Grid item  sx={{paddingLeft: '0.5rem'}} className='responsive-css grid-content-small specific'>
-                                <FieldValue value={formData?.totalVotersCount} type='number' name="totalVotes" label={{eng: "Total Voters Count:", kan: 'ಮತಗಟ್ಟೆಯ ಒಟ್ಟು ಮತದಾರರ ಸಂಖ್ಯೆ'}} placeholder="Enter Total Voters Count" />
-                            </Grid> */}
-            
-                        </Grid>
-                        <Grid container item xs={12} className='grid-section'>
+                        </Grid> */}
+                        {/* <Grid container item xs={12} className='grid-section'>
                             <Grid item xs={12}>
                                 <Typography component="h6" variant="h6" sx={{mb:2}}>
                                     NEWS ( score chart is in the attachment)
@@ -129,7 +124,7 @@ function FormEntryView(props: FormEntryViewData) {
                             <Grid item xs={12} sm={6} md={4} sx={{paddingLeft: '0.5rem'}} className='responsive-css'>
                                 <FieldValue value={formData?.news_temprature || 0} name="news_temprature" label={FIELD_VALUE_LIST.TEM_35} />
                             </Grid>
-                        </Grid>
+                        </Grid> */}
                         
                         <Grid container item xs={12}>
                             <Grid item xs={12}>
@@ -540,25 +535,25 @@ function FormEntryView(props: FormEntryViewData) {
                                     RS
                                 </Typography>
                             </Grid>
-                            <Grid container item xs={6}>
-                                <Grid item xs={12}>
+                            <Grid container item xs={12}>
+                                {/* <Grid item xs={12}>
                                     <Typography component="h6" variant="h6" sx={{mb:1, mt: 1, fontSize: '15px'}}>
                                         Right  
                                     </Typography>
                                     <hr style={{width: '70%'}}/>
-                                </Grid>
+                                </Grid> */}
                                 
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <FieldValue name="rs_right_decreased_air_entry" label={{eng: FIELD_VALUE_LIST.DECR_AIR}} value={formData?.rs_right_decreased_air_entry ? formatYesNoVal(formData?.rs_right_decreased_air_entry) : '-'}/>
+                                    <FieldValue name="rs_decreased_air_entry" label={{eng: FIELD_VALUE_LIST.DECR_AIR}} value={formData?.rs_decreased_air_entry ? formatYesNoVal(formData?.rs_decreased_air_entry) + ` - ${formData?.rs_decreased_air_entry_side}` : '-'}/>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <FieldValue name="rs_right_rhonchi" label={{eng: FIELD_VALUE_LIST.RHON}} value={formData?.rs_right_rhonchi ? formatYesNoVal(formData?.rs_right_rhonchi) : '-'}/>
+                                    <FieldValue name="rs_rhonchi" label={{eng: FIELD_VALUE_LIST.RHON}} value={formData?.rs_rhonchi ? formatYesNoVal(formData?.rs_rhonchi) + ` - ${formData?.rs_rhonchi_side}` : '-'}/>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={6}>
-                                    <FieldValue name="rs_right_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} value={formData?.rs_right_crepts ? formatYesNoVal(formData?.rs_right_crepts) : '-'}/>
+                                    <FieldValue name="rs_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} value={formData?.rs_crepts ? formatYesNoVal(formData?.rs_crepts) + ` - ${formData?.rs_crepts_side}` : '-'}/>
                                 </Grid>
                             </Grid>
-                            <Grid container item xs={6}>
+                            {/* <Grid container item xs={6}>
                                 <Grid item xs={12}>
                                     <Typography component="h6" variant="h6" sx={{mb:1, mt: 1, fontSize: '15px'}}>
                                         Left  
@@ -574,7 +569,7 @@ function FormEntryView(props: FormEntryViewData) {
                                 <Grid item xs={12} sm={6} md={6}>
                                     <FieldValue name="rs_left_crepts" label={{eng: FIELD_VALUE_LIST.CREP}} value={formData?.rs_left_crepts ? formatYesNoVal(formData?.rs_left_crepts) : '-'}/>
                                 </Grid>
-                            </Grid>
+                            </Grid> */}
 
                             <Grid container item xs={12}>
                                 <Grid item xs={12}>
@@ -742,6 +737,30 @@ function FormEntryView(props: FormEntryViewData) {
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={4}>
                                     <FieldValue name="need_source_control" label={{eng: FIELD_VALUE_LIST.PROCCED}} value={formData?.need_source_control ? formatYesNoVal(formData?.need_source_control) : '-'}/>
+                                </Grid>
+                            </Grid>
+
+                            <Grid container item xs={12}>
+                                <Grid item xs={12}>
+                                    <Typography component="h6" variant="h6" sx={{mb:2}}>
+                                        qSOFA (score=/{'>'} 2 high risk of sepsis and high mortality)
+                                    </Typography>
+                                </Grid>
+                                <Grid item  sx={{paddingLeft: '0.5rem'}} className='grid-content-small responsive-css'>
+                                    <b>{formData?.qSOFA_score} {formData?.qSOFA_score > 1 ? ' - high risk of sepsis and high mortality' : ''}</b> 
+                                </Grid>
+                            </Grid>
+
+                            <Grid container item xs={12}>
+                                <Grid item xs={12}>
+                                    <Typography component="h6" variant="h6" sx={{mb:2,  mt: 2}}>
+                                        NEWS ( score chart is in the attachment)
+                                    </Typography>
+                                </Grid>
+                                <Grid item  sx={{paddingLeft: '0.5rem'}} className='grid-content-small responsive-css'>
+                                    <b>{formData?.news_score} {formData?.news_score >= 7 ? ' - Clinical Risk is High':
+                                    formData?.news_score >= 5 && formData?.news_score <= 6 ? '- Clinical Risk is Medium' :
+                                    '- Clinical Risk is Low'}</b> 
                                 </Grid>
                             </Grid>
                         </Grid>
