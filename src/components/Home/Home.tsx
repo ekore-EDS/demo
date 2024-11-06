@@ -125,7 +125,7 @@ const Home = () => {
             <Tab label="Submited Records" value="4" />
           </TabList>
         </Box>
-        <TabPanel value="1"><EntryForm formData={formValues}/></TabPanel>
+        <TabPanel value="1"><EntryForm formData={formValues} tabNo = {value}/></TabPanel>
         <TabPanel value="2">
           <Box>
             <h4 className='my-3'>Total Records</h4>
