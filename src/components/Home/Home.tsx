@@ -44,6 +44,16 @@ const Home = () => {
   }, [_uuid, isSubmitted]);
 
   useEffect(() => {
+    const userInfo: any = getuserInfo();
+    if(isSuperUser()) {
+      dispatch(setUserDetails({activeUser: '', isSuperAdmin: true, currentUser: userInfo?.username}))
+    } else {
+      dispatch(setUserDetails({activeUser: userInfo?.username, isSuperAdmin: false, currentUser: userInfo?.username}))
+    }
+    
+  }, [])
+
+  useEffect(() => {
     let data: any = [];
     const getusers = async() => {
       if(isSuperAdmin) {
